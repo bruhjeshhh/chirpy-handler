@@ -29,8 +29,8 @@ func main() {
 	// ptr.Handle("/metrics", cfg.middlewareMetricsInc(http.HandlerFunc(cfg.fetchmetric)))
 
 	ptr.HandleFunc("GET /api/healthz", app)
-	ptr.HandleFunc("POST /api/reset", cfg.resetmetric)
-	ptr.HandleFunc("GET /api/metrics", cfg.fetchmetric)
+	ptr.HandleFunc("POST /admin/reset", cfg.resetmetric)
+	ptr.HandleFunc("GET /admin/metrics", cfg.fetchmetric)
 
 	log.Printf("we ballin")
 	log.Fatal(srv.ListenAndServe())
@@ -56,10 +56,10 @@ func (cfg *apiConfig) resetmetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) fetchmetric(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
 	hits := cfg.fileserverHits.Load()
-	resp := fmt.Sprintf("Hits: %d", hits)
+	resp := fmt.Sprintf("<html><body><h1>Welcome, Chirpy Admin</h1> <p>Chirpy has been visited %d times!</p></body></html>", hits)
 	w.Write([]byte(resp))
 
 }
