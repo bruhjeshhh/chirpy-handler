@@ -28,9 +28,9 @@ func main() {
 	ptr.Handle("/app/", cfg.middlewareMetricsInc(wrappedHandler))
 	// ptr.Handle("/metrics", cfg.middlewareMetricsInc(http.HandlerFunc(cfg.fetchmetric)))
 
-	ptr.HandleFunc("/healthz", app)
-	ptr.HandleFunc("/reset", cfg.resetmetric)
-	ptr.HandleFunc("/metrics", cfg.fetchmetric)
+	ptr.HandleFunc("GET /healthz", app)
+	ptr.HandleFunc("POST /reset", cfg.resetmetric)
+	ptr.HandleFunc("GET /metrics", cfg.fetchmetric)
 
 	log.Printf("we ballin")
 	log.Fatal(srv.ListenAndServe())
