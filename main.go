@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -31,6 +32,7 @@ func main() {
 	ptr.HandleFunc("GET /api/healthz", app)
 	ptr.HandleFunc("POST /admin/reset", cfg.resetmetric)
 	ptr.HandleFunc("GET /admin/metrics", cfg.fetchmetric)
+	ptr.HandleFunc("POST /api/validate_chirp", chirplength)
 
 	log.Printf("we ballin")
 	log.Fatal(srv.ListenAndServe())
@@ -61,5 +63,60 @@ func (cfg *apiConfig) fetchmetric(w http.ResponseWriter, r *http.Request) {
 	hits := cfg.fileserverHits.Load()
 	resp := fmt.Sprintf("<html><body><h1>Welcome, Chirpy Admin</h1> <p>Chirpy has been visited %d times!</p></body></html>", hits)
 	w.Write([]byte(resp))
+
+}
+
+func chirplength(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Body string `json:"body"`
+	}
+	type errorstc struct {
+		Error string `json:"error"`
+	}
+
+	type validity struct {
+		Valid bool `json:"valid"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	req := request{}
+	vald := validity{
+		Valid: true,
+	}
+	errormsg := errorstc{}
+	err := decoder.Decode(&req)
+	if err != nil {
+		errormsg.Error = "something went wrong"
+		resp, eror := json.Marshal(errormsg)
+		if eror != nil {
+			log.Printf("idhar dikkat aai")
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		w.Write(resp)
+		return
+	}
+
+	if len(req.Body) > 140 {
+		errormsg.Error = "lamba hogya"
+		resp, eror := json.Marshal(errormsg)
+		if eror != nil {
+			log.Printf("idhar dikkat aai2")
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		w.Write(resp)
+		return
+	}
+	resp, eror := json.Marshal(vald)
+	if eror != nil {
+		log.Printf("idhar dikkat aai3")
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(resp)
 
 }
