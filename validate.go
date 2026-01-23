@@ -15,7 +15,7 @@ func validChirp(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	if err != nil {
-		respondWithError(w, 400, "somethingwentwrong")
+		respondWithError(w, 400, "something went wrong")
 		return
 	}
 
@@ -23,5 +23,6 @@ func validChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "too long buddy(thats what she said)")
 		return
 	}
-	respondWithJson(w)
+	cleaned := cleanseBody(req.Body)
+	respondWithJson(w, cleaned)
 }

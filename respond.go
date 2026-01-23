@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
@@ -25,16 +26,15 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 
 }
 
-func respondWithJson(w http.ResponseWriter) {
-	type validity struct {
-		Valid bool `json:"valid"`
+func respondWithJson(w http.ResponseWriter, s string) {
+	type respbody struct {
+		CleanedBody string `json:"cleaned_body"`
+	}
+	res := respbody{
+		CleanedBody: s,
 	}
 
-	vald := validity{
-		Valid: true,
-	}
-
-	resp, eror := json.Marshal(vald)
+	resp, eror := json.Marshal(res)
 	if eror != nil {
 		log.Printf("idhar dikkat aai3")
 	}
@@ -42,5 +42,17 @@ func respondWithJson(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	w.Write(resp)
+
+}
+
+func cleanseBody(s string) string {
+	splits := strings.Split(s, " ")
+	for i, str := range splits {
+		lowstr := strings.ToLower(str)
+		if lowstr == "kerfuffle" || lowstr == "sharbert" || lowstr == "fornax" {
+			splits[i] = "****"
+		}
+	}
+	return strings.Join(splits, " ")
 
 }
