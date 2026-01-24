@@ -15,6 +15,8 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 func (cfg *apiConfig) resetmetric(w http.ResponseWriter, r *http.Request) {
 	hits := cfg.fileserverHits.Load()
 	cfg.fileserverHits.Add(-hits)
+
+	cfg.db.Reset(r.Context())
 }
 
 func (cfg *apiConfig) fetchmetric(w http.ResponseWriter, r *http.Request) {

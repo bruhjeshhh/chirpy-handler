@@ -26,21 +26,15 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 
 }
 
-func respondWithJson(w http.ResponseWriter, s string) {
-	type respbody struct {
-		CleanedBody string `json:"cleaned_body"`
-	}
-	res := respbody{
-		CleanedBody: s,
-	}
+func respondWithJson(w http.ResponseWriter, n int, payload any) {
 
-	resp, eror := json.Marshal(res)
+	resp, eror := json.Marshal(payload)
 	if eror != nil {
 		log.Printf("idhar dikkat aai3")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
+	w.WriteHeader(n)
 	w.Write(resp)
 
 }

@@ -1,4 +1,4 @@
-module github.com/bruhjeshhh
+module github.com/bruhjeshhh/chirpy
 
 go 1.25.6
 
