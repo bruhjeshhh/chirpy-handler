@@ -47,6 +47,45 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const postChirp = `-- name: PostChirp :one
+INSERT INTO chirps(id, created_at, updated_at, body, user_id)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5
+)
+RETURNING id, created_at, updated_at, body, user_id
+`
+
+type PostChirpParams struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Body      string
+	UserID    uuid.UUID
+}
+
+func (q *Queries) PostChirp(ctx context.Context, arg PostChirpParams) (Chirp, error) {
+	row := q.db.QueryRowContext(ctx, postChirp,
+		arg.ID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.Body,
+		arg.UserID,
+	)
+	var i Chirp
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Body,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const reset = `-- name: Reset :exec
 delete from users
 `

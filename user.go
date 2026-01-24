@@ -24,7 +24,7 @@ func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
 	}
 	email := eml.Email
 
-	_, errr := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+	feedback, errr := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
@@ -36,6 +36,7 @@ func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "db ke wqt dikkat")
 		return
 	}
+	id := feedback.ID
 
 	type respnse struct {
 		ID        string    `json:"id"`
@@ -45,7 +46,7 @@ func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := respnse{
-		ID:        "Sfdsf",
+		ID:        id.String(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Email:     email,

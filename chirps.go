@@ -2,13 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/bruhjeshhh/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
-func validChirp(w http.ResponseWriter, r *http.Request) {
-	type request struct {
-		Body string `json:"body"`
-	}
+type request struct {
+	Body   string `json:"body"`
+	UserID string `json:"user_id"`
+}
+
+func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	req := request{}
@@ -25,13 +32,37 @@ func validChirp(w http.ResponseWriter, r *http.Request) {
 	}
 	cleaned := cleanseBody(req.Body)
 
-	type profanitygone struct {
-		Body string `json:"body"`
+	req.Body = cleaned
+	id, _ := uuid.Parse(req.UserID)
+
+	feedback, eror := cfg.db.PostChirp(r.Context(), database.PostChirpParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Body:      req.Body,
+		UserID:    id,
+	})
+
+	if eror != nil {
+		log.Println(eror)
+		respondWithError(w, 400, "db ke wqt dikkat")
+		return
 	}
 
-	resp := profanitygone{
-		Body: cleaned,
+	type response struct {
+		ID        string    `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Body      string    `json:"body"`
+		UserID    string    `json:"user_id"`
 	}
 
-	respondWithJson(w, 200, resp)
+	resp := response{
+		ID:        feedback.ID.String(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Body:      req.Body,
+		UserID:    req.UserID,
+	}
+	respondWithJson(w, 201, resp)
 }
