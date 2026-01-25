@@ -103,18 +103,16 @@ func (cfg *apiConfig) fetchChirpsbyID(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// log.Println(eror)
-		respondWithError(w, 400, "db ke wqt dikkat")
+		respondWithError(w, 404, "db ke wqt dikkat")
 		return
 	}
-	chirps := []Chirp{}
-
-	chirps = append(chirps, Chirp{
+	chirps := Chirp{
 		ID:        c.ID,
 		CreatedAt: c.CreatedAt,
 		UpdatedAt: c.UpdatedAt,
 		Body:      c.Body,
 		UserID:    c.UserID,
-	})
+	}
 
 	respondWithJson(w, http.StatusOK, chirps)
 }
