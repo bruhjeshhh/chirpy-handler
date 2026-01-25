@@ -56,6 +56,7 @@ func main() {
 	ptr.HandleFunc("POST /admin/reset", cfg.resetmetric)
 	ptr.HandleFunc("GET /admin/metrics", cfg.fetchmetric)
 	ptr.HandleFunc("POST /api/chirps", cfg.Chirp)
+	ptr.HandleFunc("GET /api/chirps", cfg.fetchChirps)
 	ptr.HandleFunc("POST /api/users", cfg.addUser)
 
 	log.Printf("we ballin")

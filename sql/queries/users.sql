@@ -22,3 +22,8 @@ VALUES (
     $5
 )
 RETURNING *;
+
+-- name: GetChirps :many
+select * from chirps;
+
+ 
