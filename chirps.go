@@ -15,14 +15,6 @@ type request struct {
 	UserID string `json:"user_id"`
 }
 
-type Chirp struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Body      string    `json:"body"`
-	UserID    uuid.UUID `json:"user_id"`
-}
-
 func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
@@ -84,16 +76,5 @@ func (cfg *apiConfig) fetchChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chirps := []Chirp{}
-	for _, c := range resp {
-		chirps = append(chirps, Chirp{
-			ID:        c.ID,
-			CreatedAt: c.CreatedAt,
-			UpdatedAt: c.UpdatedAt,
-			Body:      c.Body,
-			UserID:    c.UserID,
-		})
-	}
-
-	respondWithJson(w, http.StatusOK, chirps)
+	respondWithJson(w, http.StatusOK, resp)
 }
