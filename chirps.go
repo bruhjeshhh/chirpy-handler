@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,6 +12,14 @@ import (
 type request struct {
 	Body   string `json:"body"`
 	UserID string `json:"user_id"`
+}
+
+type Chirp struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +51,7 @@ func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if eror != nil {
-		log.Println(eror)
+		// log.Println(eror)
 		respondWithError(w, 400, "db ke wqt dikkat")
 		return
 	}
@@ -75,6 +82,39 @@ func (cfg *apiConfig) fetchChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "db ke wqt dikkat")
 		return
 	}
+	chirps := []Chirp{}
+	for _, c := range resp {
+		chirps = append(chirps, Chirp{
+			ID:        c.ID,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			Body:      c.Body,
+			UserID:    c.UserID,
+		})
+	}
 
-	respondWithJson(w, http.StatusOK, resp)
+	respondWithJson(w, http.StatusOK, chirps)
+}
+
+func (cfg *apiConfig) fetchChirpsbyID(w http.ResponseWriter, r *http.Request) {
+	chirpsID := r.PathValue("chirpID")
+	id, _ := uuid.Parse(chirpsID)
+	c, err := cfg.db.GetChirpsbyID(r.Context(), id)
+
+	if err != nil {
+		// log.Println(eror)
+		respondWithError(w, 400, "db ke wqt dikkat")
+		return
+	}
+	chirps := []Chirp{}
+
+	chirps = append(chirps, Chirp{
+		ID:        c.ID,
+		CreatedAt: c.CreatedAt,
+		UpdatedAt: c.UpdatedAt,
+		Body:      c.Body,
+		UserID:    c.UserID,
+	})
+
+	respondWithJson(w, http.StatusOK, chirps)
 }
