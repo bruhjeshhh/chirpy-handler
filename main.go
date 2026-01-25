@@ -60,6 +60,7 @@ func main() {
 	ptr.HandleFunc("GET /api/chirps/{chirpID}", cfg.fetchChirpsbyID)
 
 	ptr.HandleFunc("POST /api/users", cfg.addUser)
+	ptr.HandleFunc("POST /api/login", cfg.loginUser)
 
 	log.Printf("we ballin")
 	log.Fatal(srv.ListenAndServe())
