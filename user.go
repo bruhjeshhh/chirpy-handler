@@ -16,7 +16,10 @@ type emailrecv struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 }
-
+type updateeml struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 type respnse struct {
 	ID           string    `json:"id"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -122,5 +125,43 @@ func (cfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 	}
 	respondWithJson(w, 200, resp)
+
+}
+
+func (cfg *apiConfig) updateEmail(w http.ResponseWriter, r *http.Request) {
+
+	decoder := json.NewDecoder(r.Body)
+	ueml := updateeml{}
+	err := decoder.Decode(&ueml)
+	if err != nil {
+		respondWithError(w, 400, "something went wrong")
+		return
+	}
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 201, "token not found")
+	}
+	id, err := auth.ValidateJWT(token, cfg.jwtsecret)
+	if err != nil {
+		respondWithError(w, 201, "could not validate")
+	}
+
+	hashit, hasher := auth.HashPassword(ueml.Password)
+	if hasher != nil {
+		respondWithError(w, 400, "hashing went")
+		return
+	}
+
+	erm := cfg.db.UpdateEmail(r.Context(), database.UpdateEmailParams{
+		Email:      ueml.Email,
+		HashedPswd: hashit,
+		UpdatedAt:  time.Now(),
+		ID:         id,
+	})
+
+	if erm != nil {
+		respondWithError(w, 400, "couldnt update email")
+
+	}
 
 }

@@ -17,3 +17,7 @@ delete from users;
 select * from users where email=$1;
 
 
+-- name: UpdateEmail :exec
+update users set email=$1,hashed_pswd=$2,updated_at=$3
+where id =$4;
+
