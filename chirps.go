@@ -129,3 +129,34 @@ func (cfg *apiConfig) fetchChirpsbyID(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJson(w, http.StatusOK, chirps)
 }
+
+func (cfg *apiConfig) deleteChirp(w http.ResponseWriter, r *http.Request) {
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "token not found")
+		return
+	}
+	id, err := auth.ValidateJWT(token, cfg.jwtsecret)
+	if err != nil {
+		respondWithError(w, 401, "could not validate")
+		return
+	}
+	chirpsID := r.PathValue("chirpID")
+	uuidchirpid, err := uuid.Parse(chirpsID)
+
+	chirptodeltet, err := cfg.db.GetChirpsbyID(r.Context(), uuidchirpid)
+	if chirptodeltet.UserID != id {
+		respondWithError(w, 403, "not authorized")
+	}
+
+	erdr := cfg.db.DeleteChirp(r.Context(), database.DeleteChirpParams{
+		ID:     uuidchirpid,
+		UserID: id,
+	})
+	if erdr != nil {
+		respondWithError(w, 404, "could not delete")
+		return
+	}
+	respondWithJson(w, 204, id)
+
+}

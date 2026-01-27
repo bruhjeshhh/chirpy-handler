@@ -66,6 +66,7 @@ func main() {
 	ptr.HandleFunc("PUT /api/users", cfg.updateEmail)
 	ptr.HandleFunc("POST /api/users", cfg.addUser)
 	ptr.HandleFunc("POST /api/login", cfg.loginUser)
+	ptr.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.deleteChirp)
 
 	log.Printf("we ballin")
 	log.Fatal(srv.ListenAndServe())
