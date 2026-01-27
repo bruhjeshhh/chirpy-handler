@@ -22,6 +22,7 @@ import (
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
+	jwtsecret      string
 }
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 	}
 
 	dbURL := os.Getenv("DB_URL")
+	secret := os.Getenv("secrett")
 
 	dbz, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -47,6 +49,7 @@ func main() {
 		Handler: ptr,
 	}
 	var cfg apiConfig
+	cfg.jwtsecret = secret
 	cfg.db = dbQueries
 	wrappedHandler := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
 	ptr.Handle("/app/", cfg.middlewareMetricsInc(wrappedHandler))

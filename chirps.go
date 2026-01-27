@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bruhjeshhh/chirpy/internal/auth"
 	"github.com/bruhjeshhh/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -33,6 +34,18 @@ func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokunn, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "cant fetch token")
+		return
+	}
+
+	id, errvald := auth.ValidateJWT(tokunn, cfg.jwtsecret)
+	if errvald != nil {
+		respondWithError(w, 401, "could not validate jwt")
+		return
+	}
+
 	if len(req.Body) > 140 {
 		respondWithError(w, 400, "too long buddy(thats what she said)")
 		return
@@ -40,7 +53,7 @@ func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 	cleaned := cleanseBody(req.Body)
 
 	req.Body = cleaned
-	id, _ := uuid.Parse(req.UserID)
+	// id, _ := uuid.Parse(req.UserID)
 
 	feedback, eror := cfg.db.PostChirp(r.Context(), database.PostChirpParams{
 		ID:        uuid.New(),
@@ -69,7 +82,7 @@ func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Body:      req.Body,
-		UserID:    req.UserID,
+		UserID:    id.String(),
 	}
 	respondWithJson(w, 201, resp)
 }

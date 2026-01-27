@@ -13,8 +13,9 @@ import (
 )
 
 type emailrecv struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Password         string `json:"password"`
+	Email            string `json:"email"`
+	ExpiresInSeconds int64  `json:"expires_in_seconds"`
 }
 
 type respnse struct {
@@ -22,6 +23,7 @@ type respnse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Token     string    `json:"token"`
 }
 
 func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +79,7 @@ func (cfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 	usermail := eml.Email
 	hashedpswdL, herr := cfg.db.GetHashedPswd(r.Context(), usermail)
 	if herr != nil {
+
 		respondWithError(w, 400, "not found")
 		return
 	}
@@ -90,12 +93,17 @@ func (cfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 401, "Unauthorized")
 		return
 	}
+	if eml.ExpiresInSeconds == 0 {
+		eml.ExpiresInSeconds = int64(time.Hour.Seconds())
+	}
 
+	jwtstring, err := auth.MakeJWT(hashedpswdL.ID, cfg.jwtsecret, time.Duration(eml.ExpiresInSeconds)*time.Second)
 	resp := respnse{
 		ID:        hashedpswdL.ID.String(),
 		CreatedAt: hashedpswdL.CreatedAt,
 		UpdatedAt: hashedpswdL.UpdatedAt,
 		Email:     hashedpswdL.Email,
+		Token:     jwtstring,
 	}
 	respondWithJson(w, 200, resp)
 
