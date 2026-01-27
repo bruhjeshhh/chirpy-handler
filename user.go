@@ -101,7 +101,7 @@ func (cfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, _ := auth.MakeRefreshToken()
+	refreshToken := auth.MakeRefreshToken()
 
 	_, err = cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
 		UserID:    hashedpswdL.ID,
