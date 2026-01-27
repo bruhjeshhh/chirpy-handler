@@ -13,17 +13,17 @@ import (
 )
 
 type emailrecv struct {
-	Password         string `json:"password"`
-	Email            string `json:"email"`
-	ExpiresInSeconds int64  `json:"expires_in_seconds"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 type respnse struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	ID           string    `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Email        string    `json:"email"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
@@ -93,17 +93,33 @@ func (cfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 401, "Unauthorized")
 		return
 	}
-	if eml.ExpiresInSeconds == 0 {
-		eml.ExpiresInSeconds = int64(time.Hour.Seconds())
+
+	jwtstring, err := auth.MakeJWT(hashedpswdL.ID, cfg.jwtsecret, time.Hour)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create access JWT")
+		return
 	}
 
-	jwtstring, err := auth.MakeJWT(hashedpswdL.ID, cfg.jwtsecret, time.Duration(eml.ExpiresInSeconds)*time.Second)
+	refreshToken, _ := auth.MakeRefreshToken()
+
+	_, err = cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		UserID:    hashedpswdL.ID,
+		Token:     refreshToken,
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't save refresh token")
+		return
+	}
+
 	resp := respnse{
-		ID:        hashedpswdL.ID.String(),
-		CreatedAt: hashedpswdL.CreatedAt,
-		UpdatedAt: hashedpswdL.UpdatedAt,
-		Email:     hashedpswdL.Email,
-		Token:     jwtstring,
+		ID:           hashedpswdL.ID.String(),
+		CreatedAt:    hashedpswdL.CreatedAt,
+		UpdatedAt:    hashedpswdL.UpdatedAt,
+		Email:        hashedpswdL.Email,
+		Token:        jwtstring,
+		RefreshToken: refreshToken,
 	}
 	respondWithJson(w, 200, resp)
 
