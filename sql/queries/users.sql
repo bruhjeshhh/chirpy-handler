@@ -21,3 +21,7 @@ select * from users where email=$1;
 update users set email=$1,hashed_pswd=$2,updated_at=$3
 where id =$4;
 
+
+
+-- name: UpgradeMembership :exec
+update users set is_chirpy_red=true WHERE id=$1;

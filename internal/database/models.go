@@ -29,9 +29,10 @@ type RefreshToken struct {
 }
 
 type User struct {
-	ID         uuid.UUID
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Email      string
-	HashedPswd string
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Email       string
+	HashedPswd  string
+	IsChirpyRed sql.NullBool
 }

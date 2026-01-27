@@ -67,6 +67,7 @@ func main() {
 	ptr.HandleFunc("POST /api/users", cfg.addUser)
 	ptr.HandleFunc("POST /api/login", cfg.loginUser)
 	ptr.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.deleteChirp)
+	ptr.HandleFunc("POST /api/polka/webhooks", cfg.upgradeMember)
 
 	log.Printf("we ballin")
 	log.Fatal(srv.ListenAndServe())

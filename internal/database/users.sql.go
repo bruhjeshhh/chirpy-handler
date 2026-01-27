@@ -21,7 +21,7 @@ VALUES (
     $4,
     $5
 )
-RETURNING id, created_at, updated_at, email, hashed_pswd
+RETURNING id, created_at, updated_at, email, hashed_pswd, is_chirpy_red
 `
 
 type CreateUserParams struct {
@@ -47,12 +47,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPswd,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
 
 const getHashedPswd = `-- name: GetHashedPswd :one
-select id, created_at, updated_at, email, hashed_pswd from users where email=$1
+select id, created_at, updated_at, email, hashed_pswd, is_chirpy_red from users where email=$1
 `
 
 func (q *Queries) GetHashedPswd(ctx context.Context, email string) (User, error) {
@@ -64,6 +65,7 @@ func (q *Queries) GetHashedPswd(ctx context.Context, email string) (User, error)
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPswd,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
@@ -96,5 +98,14 @@ func (q *Queries) UpdateEmail(ctx context.Context, arg UpdateEmailParams) error 
 		arg.UpdatedAt,
 		arg.ID,
 	)
+	return err
+}
+
+const upgradeMembership = `-- name: UpgradeMembership :exec
+update users set is_chirpy_red=true WHERE id=$1
+`
+
+func (q *Queries) UpgradeMembership(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, upgradeMembership, id)
 	return err
 }

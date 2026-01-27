@@ -27,6 +27,14 @@ type respnse struct {
 	Email        string    `json:"email"`
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
+	ChirpyRed    bool      `json:"is_chirpy_red"`
+}
+
+type red struct {
+	Event string `json:"event"`
+	Data  struct {
+		UserID string `json:"user_id"`
+	} `json:"data"`
 }
 
 func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +73,7 @@ func (cfg *apiConfig) addUser(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Email:     email,
+		ChirpyRed: false,
 	}
 	respondWithJson(w, 201, resp)
 
@@ -123,6 +132,7 @@ func (cfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		Email:        hashedpswdL.Email,
 		Token:        jwtstring,
 		RefreshToken: refreshToken,
+		ChirpyRed:    hashedpswdL.IsChirpyRed.Bool,
 	}
 	respondWithJson(w, 200, resp)
 
@@ -170,5 +180,33 @@ func (cfg *apiConfig) updateEmail(w http.ResponseWriter, r *http.Request) {
 		Email:     ueml.Email,
 	}
 	respondWithJson(w, 200, resp)
+
+}
+
+func (cfg *apiConfig) upgradeMember(w http.ResponseWriter, r *http.Request) {
+
+	decoder := json.NewDecoder(r.Body)
+	req := red{}
+	err := decoder.Decode(&req)
+	if err != nil {
+		respondWithError(w, 400, "something went wrong")
+		return
+	}
+
+	if req.Event != "user.upgraded" {
+		respondWithJson(w, 204, "we dont care ;/")
+		return
+	}
+
+	userid := req.Data.UserID
+	uid, _ := uuid.Parse(userid)
+
+	errr := cfg.db.UpgradeMembership(r.Context(), uid)
+
+	if errr != nil {
+		respondWithError(w, 404, "nahi mila")
+		return
+	}
+	respondWithJson(w, 204, "hogaya")
 
 }
