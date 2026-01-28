@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/bruhjeshhh/chirpy/internal/auth"
@@ -88,25 +89,57 @@ func (cfg *apiConfig) Chirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) fetchChirps(w http.ResponseWriter, r *http.Request) {
-	resp, err := cfg.db.GetChirps(r.Context())
-
-	if err != nil {
-		// log.Println(err)
-		respondWithError(w, 400, "db ke wqt dikkat")
-		return
-	}
 	chirps := []Chirp{}
-	for _, c := range resp {
-		chirps = append(chirps, Chirp{
-			ID:        c.ID,
-			CreatedAt: c.CreatedAt,
-			UpdatedAt: c.UpdatedAt,
-			Body:      c.Body,
-			UserID:    c.UserID,
-		})
+	s := r.URL.Query().Get("author_id")
+	// sorst := r.URL.Query().Get("sort")
+	if s == "" {
+		resp, err := cfg.db.GetChirps(r.Context())
+
+		if err != nil {
+			// log.Println(err)
+			respondWithError(w, 400, "db ke wqt dikkat")
+			return
+		}
+
+		for _, c := range resp {
+			chirps = append(chirps, Chirp{
+				CreatedAt: c.CreatedAt,
+				Body:      c.Body,
+			})
+		}
+
+	} else {
+		uids, _ := uuid.Parse(s)
+		resp, err := cfg.db.GetChirpsByAuthor(r.Context(), uids)
+
+		if err != nil {
+			// log.Println(err)
+			respondWithError(w, 400, "db ke wqt dikkat")
+			return
+		}
+
+		for _, c := range resp {
+			chirps = append(chirps, Chirp{
+				Body:      c.Body,
+				CreatedAt: c.CreatedAt,
+			})
+		}
 	}
+
+	sortDirection := "asc"
+	sortDirectionParam := r.URL.Query().Get("sort")
+	if sortDirectionParam == "desc" {
+		sortDirection = "desc"
+	}
+	sort.Slice(chirps, func(i, j int) bool {
+		if sortDirection == "desc" {
+			return chirps[i].CreatedAt.After(chirps[j].CreatedAt)
+		}
+		return chirps[i].CreatedAt.Before(chirps[j].CreatedAt)
+	})
 
 	respondWithJson(w, http.StatusOK, chirps)
+
 }
 
 func (cfg *apiConfig) fetchChirpsbyID(w http.ResponseWriter, r *http.Request) {

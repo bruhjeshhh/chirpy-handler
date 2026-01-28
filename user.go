@@ -185,6 +185,15 @@ func (cfg *apiConfig) updateEmail(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *apiConfig) upgradeMember(w http.ResponseWriter, r *http.Request) {
 
+	token, erro := auth.GetAPIKey(r.Header)
+	if erro != nil {
+		respondWithError(w, 401, "token not found")
+	}
+	if token != cfg.apiKey {
+		respondWithError(w, 401, "not authorized")
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	req := red{}
 	err := decoder.Decode(&req)
