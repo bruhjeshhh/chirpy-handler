@@ -16,7 +16,7 @@ import (
 
 //	type Server struct {
 //		Addr string
-//		Handler Handler
+//		Handler Handler lock in
 //	}
 
 type apiConfig struct {
