@@ -23,6 +23,44 @@ A Go-based web API that provides a Twitter-like microblogging service called "ch
 - Refresh tokens (60-day expiration)
 - Token revocation support
 - API key authentication for webhooks
+- **Middleware-based authentication** for protected routes
+
+## Authentication Flow
+
+This project uses **middleware-based authentication** for protected routes.
+
+### How It Works
+
+1. **Client sends request with JWT**:
+   ```
+   Authorization: Bearer <jwt_token>
+   ```
+
+2. **Middleware intercepts the request** (before the handler runs):
+   - Extracts token from the `Authorization` header
+   - Validates the JWT using the secret key
+   - If invalid/missing, returns 401 immediately (handler never runs)
+   - If valid, stores user ID in request context
+
+3. **Handler accesses user ID from context**:
+   ```go
+   id, ok := auth.GetUserID(r.Context())
+   if !ok {
+       respondWithError(w, 401, "unauthorized")
+       return
+   }
+   ```
+
+### Protected Routes
+
+These routes use the auth middleware:
+- `POST /api/chirps` - Create chirp
+- `PUT /api/users` - Update user profile
+- `DELETE /api/chirps/{chirpID}` - Delete chirp
+
+### Middleware Implementation
+
+See `internal/auth/middleware.go` for the implementation.
 
 ### Admin Features
 - Metrics dashboard for server monitoring
@@ -166,6 +204,11 @@ chirpy-handler/
 ├── assets/                    # Static assets
 ├── internal/
 │   ├── auth/                  # Authentication logic
+│   │   ├── auth.go           # Password hashing
+│   │   ├── jwt.go            # JWT creation/validation
+│   │   ├── jwt_Handler.go    # Token extraction
+│   │   ├── refresh_tokens.go # Refresh token generation
+│   │   └── middleware.go     # Auth middleware
 │   └── database/             # Database layer
 └── sql/
     ├── schema/               # Database migrations
