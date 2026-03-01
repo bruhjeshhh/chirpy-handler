@@ -147,13 +147,10 @@ func (cfg *apiConfig) updateEmail(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, "something went wrong")
 		return
 	}
-	token, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		respondWithError(w, 401, "token not found")
-	}
-	id, err := auth.ValidateJWT(token, cfg.jwtsecret)
-	if err != nil {
-		respondWithError(w, 401, "could not validate")
+	id, ok := auth.GetUserID(r.Context())
+	if !ok {
+		respondWithError(w, 401, "unauthorized")
+		return
 	}
 
 	hashit, hasher := auth.HashPassword(ueml.Password)

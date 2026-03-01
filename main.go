@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync/atomic"
 
+	"github.com/bruhjeshhh/chirpy/internal/auth"
 	"github.com/bruhjeshhh/chirpy/internal/database"
 
 	"github.com/joho/godotenv"
@@ -61,15 +62,18 @@ func main() {
 	ptr.HandleFunc("GET /api/healthz", app)
 	ptr.HandleFunc("POST /admin/reset", cfg.resetmetric)
 	ptr.HandleFunc("GET /admin/metrics", cfg.fetchmetric)
-	ptr.HandleFunc("POST /api/chirps", cfg.Chirp)
+
+	authMiddleware := auth.MiddlewareAuth(cfg.jwtsecret)
+
+	ptr.Handle("POST /api/chirps", authMiddleware(http.HandlerFunc(cfg.Chirp)))
 	ptr.HandleFunc("GET /api/chirps", cfg.fetchChirps)
 	ptr.HandleFunc("GET /api/chirps/{chirpID}", cfg.fetchChirpsbyID)
 	ptr.HandleFunc("POST /api/refresh", cfg.handlerRefresh)
 	ptr.HandleFunc("POST /api/revoke", cfg.handlerRevoke)
-	ptr.HandleFunc("PUT /api/users", cfg.updateEmail)
+	ptr.Handle("PUT /api/users", authMiddleware(http.HandlerFunc(cfg.updateEmail)))
 	ptr.HandleFunc("POST /api/users", cfg.addUser)
 	ptr.HandleFunc("POST /api/login", cfg.loginUser)
-	ptr.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.deleteChirp)
+	ptr.Handle("DELETE /api/chirps/{chirpID}", authMiddleware(http.HandlerFunc(cfg.deleteChirp)))
 	ptr.HandleFunc("POST /api/polka/webhooks", cfg.upgradeMember)
 
 	log.Printf("we ballin")
